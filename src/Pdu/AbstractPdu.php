@@ -86,7 +86,37 @@ abstract class AbstractPdu
      */
     protected $commandStatus;
 
-    protected $
+    /**
+     * @var int
+     */
+    protected $sequenceNumber;
+
+    /**
+     * @var array
+     */
+    protected $packetHeaderFormat = [
+        [
+            'type' => self::DATA_TYPE_INT,
+            'name' => 'commandLength',
+        ],
+        [
+            'type' => self::DATA_TYPE_INT,
+            'name' => 'commandId',
+        ],
+        [
+            'type' => self::DATA_TYPE_INT,
+            'name' => 'commandStatus',
+        ],
+        [
+            'type' => self::DATA_TYPE_INT,
+            'name' => 'sequenceNumber',
+        ],
+    ];
+
+    /**
+     * @var array
+     */
+    protected $packetBodyFormat = [];
 
     /**
      * @return string
@@ -117,15 +147,26 @@ abstract class AbstractPdu
     /**
      * @return int
      */
+    public function getSequenceNumber()
+    {
+        return $this->sequenceNumber;
+    }
+
+    /**
+     * @param int $sequenceNumber
+     */
+    public function setSequenceNumber($sequenceNumber)
+    {
+        $this->sequenceNumber = $sequenceNumber;
+    }
+
+    /**
+     * @return int
+     */
     abstract public function getCommandId();
 
     /**
      * @return string
      */
     abstract public function getCommandName();
-
-    /**
-     * @return int
-     */
-    abstract public function getCommandLength();
 }
