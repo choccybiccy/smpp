@@ -3,16 +3,21 @@
 namespace Choccybiccy\Smpp\Pdu;
 
 /**
- * Class GenericNack.
+ * Class SubmitSmResp.
  */
-class GenericNack extends AbstractPdu
+class SubmitSmResp extends AbstractPdu
 {
+    /**
+     * @inheritDoc
+     */
+    protected $isResponse = true;
+
     /**
      * @inheritDoc
      */
     public function getCommandId()
     {
-        return 0x00000000;
+        return 0x80000004;
     }
 
     /**
@@ -20,6 +25,6 @@ class GenericNack extends AbstractPdu
      */
     public function getCommandName()
     {
-        return 'generic_nack';
+        return 'submit_sm_resp';
     }
 }

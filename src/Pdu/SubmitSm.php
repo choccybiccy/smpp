@@ -5,10 +5,10 @@ namespace Choccybiccy\Smpp\Pdu;
 /**
  * Class SubmitSm.
  */
-class SubmitSm extends DataSm
+class SubmitSm extends AbstractPdu
 {
     /**
-     * @return int
+     * @inheritDoc
      */
     public function getCommandId()
     {
@@ -16,7 +16,7 @@ class SubmitSm extends DataSm
     }
 
     /**
-     * @return string
+     * @inheritDoc
      */
     public function getCommandName()
     {

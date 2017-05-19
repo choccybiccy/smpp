@@ -8,7 +8,7 @@ namespace Choccybiccy\Smpp\Pdu;
 class EnquireLink extends AbstractPdu
 {
     /**
-     * @return int
+     * @inheritDoc
      */
     public function getCommandId()
     {
@@ -16,7 +16,7 @@ class EnquireLink extends AbstractPdu
     }
 
     /**
-     * @return string
+     * @inheritDoc
      */
     public function getCommandName()
     {

@@ -5,10 +5,10 @@ namespace Choccybiccy\Smpp\Pdu;
 /**
  * Class BindTransmitter.
  */
-class BindTransmitter extends AbstractPdu
+class BindTransmitter extends BindReceiver
 {
     /**
-     * @return int
+     * @inheritDoc
      */
     public function getCommandId()
     {
@@ -16,7 +16,7 @@ class BindTransmitter extends AbstractPdu
     }
 
     /**
-     * @return string
+     * @inheritDoc
      */
     public function getCommandName()
     {

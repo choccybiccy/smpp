@@ -2,15 +2,19 @@
 
 namespace Choccybiccy\Smpp\Pdu;
 
+use Choccybiccy\Smpp\Pdu\Exception\MalformedPduException;
+use Choccybiccy\Smpp\Pdu\Exception\PduException;
+
 /**
  * Class AbstractPdu.
  */
 abstract class AbstractPdu
 {
+    const HEADER_SIZE = 16;
 
     const DATA_TYPE_INT = 'int';
-    const DATA_TYPE_C_OCTET_STR = 'c_octet';
-    const DATA_TYPE_OCTET_STR = 'octet';
+    const DATA_TYPE_VARCHAR = 'varchar';
+    const DATA_TYPE_CHAR = 'char';
     const DATA_TYPE_DATETIME = 'datetime';
 
     const ESME_ROK = 0x00000000;
@@ -75,7 +79,7 @@ abstract class AbstractPdu
     const NPI_DATA = 0x00000011;
     const NPI_TELEX = 0x00000100;
     const NPI_LAND_LINE = 0x00000110;
-    const NPI_NATIONAL_ = 0x00001000;
+    const NPI_NATIONAL = 0x00001000;
     const NPI_PRIVATE = 0x00001001;
     const NPI_ERMES = 0x00001010;
     const NPI_IP = 0x00001110;
@@ -92,24 +96,33 @@ abstract class AbstractPdu
     protected $sequenceNumber;
 
     /**
+     * @var bool
+     */
+    protected $isResponse = false;
+
+    /**
      * @var array
      */
     protected $packetHeaderFormat = [
         [
             'type' => self::DATA_TYPE_INT,
-            'name' => 'commandLength',
+            'field' => 'commandLength',
+            'length' => 4,
         ],
         [
             'type' => self::DATA_TYPE_INT,
-            'name' => 'commandId',
+            'field' => 'commandId',
+            'length' => 4,
         ],
         [
             'type' => self::DATA_TYPE_INT,
-            'name' => 'commandStatus',
+            'field' => 'commandStatus',
+            'length' => 4,
         ],
         [
             'type' => self::DATA_TYPE_INT,
-            'name' => 'sequenceNumber',
+            'field' => 'sequenceNumber',
+            'length' => 4,
         ],
     ];
 
@@ -119,11 +132,208 @@ abstract class AbstractPdu
     protected $packetBodyFormat = [];
 
     /**
+     * AbstractPdu constructor.
+     *
+     * @param array|null $parameters
+     */
+    public function __construct(array $parameters = null)
+    {
+        if ($parameters) {
+            $this->set($parameters);
+        }
+    }
+
+    /**
+     * @param array|string $property
+     * @param mixed        $value
+     *
+     * @return $this
+     */
+    public function set($property, $value = null)
+    {
+        if (is_array($property)) {
+            foreach ($property as $key => $value) {
+                $this->set($key, $value);
+            }
+        } else {
+            if (property_exists($this, $property)) {
+                $this->{$property} = $value;
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @param string $property
+     *
+     * @return mixed
+     */
+    public function get($property)
+    {
+        if (property_exists($this, $property)) {
+            return $this->{$property};
+        }
+        return null;
+    }
+
+    /**
      * @return string
+     *
+     * @throws PduException
      */
     public function encode()
     {
+        $packetFormat = array_merge($this->packetHeaderFormat, $this->packetBodyFormat);
+        $data = $this->encodeSection(self::DATA_TYPE_INT, $this->getCommandId(), 4);
+        foreach ($packetFormat as $section) {
+            $data.= $this->encodeSection($section['type'], $this->get($section['field']), $section['length']);
+        }
+        return pack('N', strlen($data)+4) . $data;
+    }
 
+    /**
+     * @param $type
+     * @param $value
+     *
+     * @return string
+     */
+    protected function encodeSection($type, $value, $length)
+    {
+        switch ($type)
+        {
+            case self::DATA_TYPE_INT:
+                $lengthFormat = [
+                    1 => 'C',
+                    2 => 'n',
+                    4 => 'N',
+                ];
+                return pack("$lengthFormat[$length]", substr($value, 0, $length));
+                break;
+            case self::DATA_TYPE_VARCHAR:
+                return $value . chr(0);
+                break;
+            case self::DATA_TYPE_CHAR:
+                // @TODO Add encode support for char type
+                break;
+            case self::DATA_TYPE_DATETIME:
+                // @TODO Add encode support for datetime type
+                break;
+        }
+        return chr(0);
+    }
+
+    /**
+     * Decode packet data and populate PDU properties.
+     *
+     * @param string $data
+     *
+     * @return $this
+     *
+     * @throws PduException
+     */
+    public function decode($data)
+    {
+        $offset = 0;
+        $packetFormat = array_merge($this->packetHeaderFormat, $this->packetBodyFormat);
+        foreach ($packetFormat as $section) {
+            $length = $section['length'];
+            $this->decodeSection($data, $section['type'], $section['field'], $length, $offset);
+        }
+        return $this;
+    }
+
+    /**
+     * Decode a particular section of the packet data.
+     *
+     * @param string   $data
+     * @param string   $type
+     * @param string   $field
+     * @param int|null $length
+     * @param int      $offset
+     *
+     * @throws PduException
+     */
+    public function decodeSection($data, $type, $field, $length, &$offset)
+    {
+        switch ($type)
+        {
+            case self::DATA_TYPE_INT:
+                $value = true;
+                if ($length > 0) {
+                    $value = $this->decodeInt($data, $offset, $length);
+                }
+                break;
+            case self::DATA_TYPE_VARCHAR:
+                $value = $this->decodeVarchar($data, $offset, $length);
+                break;
+            case self::DATA_TYPE_CHAR:
+                // @TODO Add decode support for char type
+                break;
+            case self::DATA_TYPE_DATETIME:
+                // @TODO Add decode support for datetime type
+                break;
+            default:
+                throw new PduException('Cannot decode unknown type "'.$type.'"');
+        }
+        $this->set($field, $value);
+    }
+
+    /**
+     * Decode an integer part of the packet data.
+     *
+     * @param string $data
+     * @param int    $offset
+     * @param int    $length
+     *
+     * @return int
+     */
+    protected function decodeInt($data, &$offset, $length)
+    {
+        $format = "N";
+        switch ($length)
+        {
+            case 1:
+                $format = 'C';
+                break;
+            case 2:
+                $format = 'n';
+                break;
+            case 8:
+                $format = 'J';
+                break;
+        }
+        $int = null;
+        extract(unpack("{$format}int", substr($data, $offset, $length)), EXTR_OVERWRITE);
+        $offset += $length;
+        return $int & 0xFFFFFFFF;
+    }
+
+    protected function decodeVarchar($data, &$offset, &$length)
+    {
+        if ("\0" === $data[$offset]) {
+            $offset++;
+            return null;
+        }
+
+        $remainingSize = strlen($data)-$offset;
+        if ($length > $remainingSize) {
+            $length = $remainingSize;
+        }
+
+        $string = '';
+        $current = $data[$offset];
+        while("\0" !== $current && $offset < ($offset+$length)) {
+            $string.= $current;
+            $offset++;
+            if (isset($data[$offset])) {
+                $current = $data[$offset];
+            }
+        }
+        $offset++;
+        if ("\0" !== $current) {
+            throw new MalformedPduException('Expected terminating null at offset ' . $offset);
+        }
+        return $string;
     }
 
     /**
@@ -158,6 +368,14 @@ abstract class AbstractPdu
     public function setSequenceNumber($sequenceNumber)
     {
         $this->sequenceNumber = $sequenceNumber;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isResponse()
+    {
+        return $isResponse;
     }
 
     /**

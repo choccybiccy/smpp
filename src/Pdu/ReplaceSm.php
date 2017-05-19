@@ -3,16 +3,16 @@
 namespace Choccybiccy\Smpp\Pdu;
 
 /**
- * Class GenericNack.
+ * Class ReplaceSm.
  */
-class GenericNack extends AbstractPdu
+class ReplaceSm extends AbstractPdu
 {
     /**
      * @inheritDoc
      */
     public function getCommandId()
     {
-        return 0x00000000;
+        return 0x00000007;
     }
 
     /**
@@ -20,6 +20,6 @@ class GenericNack extends AbstractPdu
      */
     public function getCommandName()
     {
-        return 'generic_nack';
+        return 'replace_sm';
     }
 }
