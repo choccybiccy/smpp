@@ -2,29 +2,7 @@
 
 namespace Choccybiccy\Smpp;
 
-use Choccybiccy\Smpp\Pdu\AbstractPdu;
-use Choccybiccy\Smpp\Pdu\BindReceiver;
-use Choccybiccy\Smpp\Pdu\BindReceiverResp;
-use Choccybiccy\Smpp\Pdu\BindTransceiver;
-use Choccybiccy\Smpp\Pdu\BindTransceiverResp;
-use Choccybiccy\Smpp\Pdu\BindTransmitter;
-use Choccybiccy\Smpp\Pdu\BindTransmitterResp;
-use Choccybiccy\Smpp\Pdu\CancelSm;
-use Choccybiccy\Smpp\Pdu\CancelSmResp;
-use Choccybiccy\Smpp\Pdu\DeliverSm;
-use Choccybiccy\Smpp\Pdu\DeliverSmResp;
-use Choccybiccy\Smpp\Pdu\EnquireLink;
-use Choccybiccy\Smpp\Pdu\EnquireLinkResp;
-use Choccybiccy\Smpp\Pdu\Exception\UnsupportedPduCommandException;
-use Choccybiccy\Smpp\Pdu\GenericNack;
-use Choccybiccy\Smpp\Pdu\QuerySm;
-use Choccybiccy\Smpp\Pdu\QuerySmResp;
-use Choccybiccy\Smpp\Pdu\ReplaceSm;
-use Choccybiccy\Smpp\Pdu\ReplaceSmResp;
-use Choccybiccy\Smpp\Pdu\SubmitSm;
-use Choccybiccy\Smpp\Pdu\SubmitSmResp;
-use Choccybiccy\Smpp\Pdu\Unbind;
-use Choccybiccy\Smpp\Pdu\UnbindResp;
+use Choccybiccy\Smpp\Pdu;
 
 /**
  * Class PduFactory.
@@ -36,27 +14,27 @@ class PduFactory
      * @var array
      */
     protected $commands = [
-        'bind_receiver' => BindReceiver::class,
-        'bind_receiver_resp' => BindReceiverResp::class,
-        'bind_transceiver' => BindTransceiver::class,
-        'bind_transceiver_resp' => BindTransceiverResp::class,
-        'bind_transmitter' => BindTransmitter::class,
-        'bind_transmitter_resp' => BindTransmitterResp::class,
-        'cancel_sm' => CancelSm::class,
-        'cancel_sm_resp' => CancelSmResp::class,
-        'deliver_sm' => DeliverSm::class,
-        'deliver_sm_resp' => DeliverSmResp::class,
-        'enquire_link' => EnquireLink::class,
-        'enquire_link_resp' => EnquireLinkResp::class,
-        'generick_nack' => GenericNack::class,
-        'query_sm' => QuerySm::class,
-        'query_sm_resp' => QuerySmResp::class,
-        'replace_sm' => ReplaceSm::class,
-        'replace_sm_resp' => ReplaceSmResp::class,
-        'submit_sm' => SubmitSm::class,
-        'submit_sm_resp' => SubmitSmResp::class,
-        'unbind' => Unbind::class,
-        'unbind_resp' => UnbindResp::class,
+        'bind_receiver'         => Pdu\BindReceiver::class,
+        'bind_receiver_resp'    => Pdu\BindReceiverResp::class,
+        'bind_transceiver'      => Pdu\BindTransceiver::class,
+        'bind_transceiver_resp' => Pdu\BindTransceiverResp::class,
+        'bind_transmitter'      => Pdu\BindTransmitter::class,
+        'bind_transmitter_resp' => Pdu\BindTransmitterResp::class,
+        'cancel_sm'             => Pdu\CancelSm::class,
+        'cancel_sm_resp'        => Pdu\CancelSmResp::class,
+        'deliver_sm'            => Pdu\DeliverSm::class,
+        'deliver_sm_resp'       => Pdu\DeliverSmResp::class,
+        'enquire_link'          => Pdu\EnquireLink::class,
+        'enquire_link_resp'     => Pdu\EnquireLinkResp::class,
+        'generick_nack'         => Pdu\GenericNack::class,
+        'query_sm'              => Pdu\QuerySm::class,
+        'query_sm_resp'         => Pdu\QuerySmResp::class,
+        'replace_sm'            => Pdu\ReplaceSm::class,
+        'replace_sm_resp'       => Pdu\ReplaceSmResp::class,
+        'submit_sm'             => Pdu\SubmitSm::class,
+        'submit_sm_resp'        => Pdu\SubmitSmResp::class,
+        'unbind'                => Pdu\Unbind::class,
+        'unbind_resp'           => Pdu\UnbindResp::class,
     ];
 
     /**
@@ -96,7 +74,7 @@ class PduFactory
     {
         $pdus = [];
         $packetLength = strlen($data);
-        if ($packetLength < AbstractPdu::HEADER_SIZE) {
+        if ($packetLength < Pdu\AbstractPdu::HEADER_SIZE) {
             return null;
         }
         $position = 0;
@@ -105,7 +83,7 @@ class PduFactory
             extract(unpack('NpduLength', substr($data, $position, 4)), EXTR_OVERWRITE);
             $pduData = substr($data, $position, $pduLength);
             /** @var int $commandId */
-            extract(unpack('NcommandId', substr($pduData, 4, 4)));
+            extract(unpack('NcommandId', substr($pduData, 4, 4)), EXTR_OVERWRITE);
             if (array_key_exists($commandId, $this->commandIds)) {
                 $pdus[] = $this->createFromCommandId($commandId)->decode($data);
             }
@@ -120,14 +98,14 @@ class PduFactory
      * @param string     $command
      * @param array|null $parameters
      *
-     * @return AbstractPdu
+     * @return Pdu\AbstractPdu
      *
-     * @throws UnsupportedPduCommandException
+     * @throws Pdu\Exception\UnsupportedPduCommandException
      */
     public function createFromCommand($command, array $parameters = null)
     {
         if (!array_key_exists($command, $this->commands)) {
-            throw new UnsupportedPduCommandException("The command {$command} is not supported");
+            throw new Pdu\Exception\UnsupportedPduCommandException("The command {$command} is not supported");
         }
         $class = $this->commands[$command];
         return new $class($parameters);
@@ -139,14 +117,14 @@ class PduFactory
      * @param int        $id
      * @param array|null $parameters
      *
-     * @return AbstractPdu
+     * @return Pdu\AbstractPdu
      *
-     * @throws UnsupportedPduCommandException
+     * @throws Pdu\Exception\UnsupportedPduCommandException
      */
     public function createFromCommandId($id, array $parameters = null)
     {
         if (!array_key_exists($id, $this->commandIds)) {
-            throw new UnsupportedPduCommandException("The command ID {$id} is not supported");
+            throw new Pdu\Exception\UnsupportedPduCommandException("The command ID {$id} is not supported");
         }
         return $this->createFromCommand($this->commandIds[$id], $parameters);
     }

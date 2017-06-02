@@ -183,7 +183,7 @@ abstract class AbstractPdu
      */
     public function encode()
     {
-        $packetFormat = array_merge($this->packetHeaderFormat, $this->packetBodyFormat);
+        $packetFormat = array_merge(array_slice($this->packetHeaderFormat, 2), $this->packetBodyFormat);
         $data = $this->encodeSection(self::DATA_TYPE_INT, $this->getCommandId(), 4);
         foreach ($packetFormat as $section) {
             $data.= $this->encodeSection($section['type'], $this->get($section['field']), $section['length']);
