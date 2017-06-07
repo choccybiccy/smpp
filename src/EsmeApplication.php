@@ -20,7 +20,7 @@ class EsmeApplication extends AbstractApplication
      * @var array
      */
     protected $inputArguments = [
-        ['remote', InputArgument::REQUIRED, 'Remote address'],
+        ['remote', InputArgument::OPTIONAL, 'Remote address'],
     ];
 
     /**
@@ -41,7 +41,11 @@ class EsmeApplication extends AbstractApplication
      */
     protected function execute()
     {
-        $this->connector->connect($this->input->getArgument('remote'))
+        $remote = $this->input->getArgument('remote') ?: $this->config->get('esme.remote_address');
+        if (!$remote) {
+            throw new \RuntimeException('No remote address specified');
+        }
+        $this->connector->connect($remote)
             ->then(function (ConnectionInterface $connection) {
                 $this->log->info('Connection established with ' . $connection->getRemoteAddress());
                 $connection->on('data', function ($data) use ($connection) {

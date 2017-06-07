@@ -4,18 +4,22 @@ namespace Choccybiccy\Smpp;
 
 use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
-use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Helper\TableStyle;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Yaml\Yaml;
 
 abstract class AbstractApplication
 {
+    /**
+     * @var Config
+     */
+    protected $config;
+
     /**
      * @var LoopInterface
      */
@@ -69,6 +73,20 @@ abstract class AbstractApplication
     }
 
     /**
+     * Load configuration from file.
+     *
+     * @return void
+     */
+    protected function loadConfiguration()
+    {
+        $configPath = $this->input->getOption('config') ?: __DIR__ . '/../config/config.yml';
+        if (!file_exists($configPath)) {
+            throw new \RuntimeException('Cannot find configuration file at ' . $configPath);
+        }
+        $this->config = new Config(Yaml::parse(file_get_contents($configPath)));
+    }
+
+    /**
      * Load input options.
      */
     protected function loadInput()
@@ -97,6 +115,7 @@ abstract class AbstractApplication
                 $this->showHelp();
             } else {
                 $this->loadInput();
+                $this->loadConfiguration();
                 $this->execute();
                 $this->loop->run();
             }

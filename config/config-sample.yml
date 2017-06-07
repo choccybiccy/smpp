@@ -1,0 +1,4 @@
+smsc:
+  listen_address: 0.0.0.0:9000
+esme:
+  remote_address: 192.168.100.21:9000
