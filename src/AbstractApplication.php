@@ -84,6 +84,7 @@ abstract class AbstractApplication
             throw new \RuntimeException('Cannot find configuration file at ' . $configPath);
         }
         $this->config = new Config(Yaml::parse(file_get_contents($configPath)));
+        $this->log->info('Configuration loaded from ' . realpath($configPath));
     }
 
     /**

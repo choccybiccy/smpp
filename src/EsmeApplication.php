@@ -45,6 +45,7 @@ class EsmeApplication extends AbstractApplication
         if (!$remote) {
             throw new \RuntimeException('No remote address specified');
         }
+        $this->log->info('Connecting to ' . $remote);
         $this->connector->connect($remote)
             ->then(function (ConnectionInterface $connection) {
                 $this->log->info('Connection established with ' . $connection->getRemoteAddress());
