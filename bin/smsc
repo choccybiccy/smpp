@@ -1,0 +1,17 @@
+#!/usr/bin/php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Choccybiccy\Smpp\Providers\ApplicationServiceProvider;
+use Choccybiccy\Smpp\SmscApplication;
+use League\Container\Container;
+use League\Container\ReflectionContainer;
+
+$container = (new Container())
+    ->delegate(new ReflectionContainer())
+    ->addServiceProvider(new ApplicationServiceProvider());
+
+/** @var SmscApplication $app */
+$app = $container->get(SmscApplication::class);
+$app->run();
