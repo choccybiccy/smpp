@@ -186,7 +186,8 @@ abstract class AbstractPdu
         $packetFormat = array_merge(array_slice($this->packetHeaderFormat, 2), $this->packetBodyFormat);
         $data = $this->encodeSection(self::DATA_TYPE_INT, $this->getCommandId(), 4);
         foreach ($packetFormat as $section) {
-            $data.= $this->encodeSection($section['type'], $this->get($section['field']), $section['length']);
+            $length = array_key_exists('length', $section) ? $section['length'] : null;
+            $data.= $this->encodeSection($section['type'], $this->get($section['field']), $length);
         }
         return pack('N', strlen($data)+4) . $data;
     }
@@ -213,7 +214,9 @@ abstract class AbstractPdu
                 return $value . chr(0);
                 break;
             case self::DATA_TYPE_CHAR:
-                // @TODO Add encode support for char type
+                if ($value !== null) {
+                    return chr($value);
+                }
                 break;
             case self::DATA_TYPE_DATETIME:
                 // @TODO Add encode support for datetime type
@@ -236,7 +239,7 @@ abstract class AbstractPdu
         $offset = 0;
         $packetFormat = array_merge($this->packetHeaderFormat, $this->packetBodyFormat);
         foreach ($packetFormat as $section) {
-            $length = $section['length'];
+            $length = array_key_exists('length', $section) ? $section['length'] : null;
             $this->decodeSection($data, $section['type'], $section['field'], $length, $offset);
         }
         return $this;
@@ -267,7 +270,8 @@ abstract class AbstractPdu
                 $value = $this->decodeVarchar($data, $offset, $length);
                 break;
             case self::DATA_TYPE_CHAR:
-                // @TODO Add decode support for char type
+                $value = ord($data[$offset]);
+                $offset++;
                 break;
             case self::DATA_TYPE_DATETIME:
                 // @TODO Add decode support for datetime type

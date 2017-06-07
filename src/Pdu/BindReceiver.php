@@ -63,18 +63,15 @@ class BindReceiver extends AbstractPdu
         ],
         [
             'field' => 'interfaceVersion',
-            'type' => self::DATA_TYPE_INT,
-            'length' => 1,
+            'type' => self::DATA_TYPE_CHAR,
         ],
         [
             'field' => 'addrTon',
-            'type' => self::DATA_TYPE_INT,
-            'length' => 1,
+            'type' => self::DATA_TYPE_CHAR,
         ],
         [
             'field' => 'addrNpi',
-            'type' => self::DATA_TYPE_INT,
-            'length' => 1,
+            'type' => self::DATA_TYPE_CHAR,
         ],
         [
             'field' => 'addressRange',
