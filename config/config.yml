@@ -1,0 +1,18 @@
+server:
+  listen_address: tcp://0.0.0.0:9000 # (tcp/tls)://IP:PORT
+  context: []
+
+connector:
+  connections:
+    - address: 127.0.0.1:9000
+      bind:
+        type: bind_transceiver
+        pdu:
+          systemId: example
+          password: password
+  options: []
+
+log:
+  name: smsc
+  handler: php://stdout # php://stdout or filename
+  level: DEBUG # Possible values: DEBUG INFO NOTICE WARNING ERROR CRITICAL ALERT EMERGENCY

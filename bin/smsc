@@ -4,14 +4,13 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Choccybiccy\Smpp\Providers\ApplicationServiceProvider;
-use Choccybiccy\Smpp\SmscApplication;
 use League\Container\Container;
 use League\Container\ReflectionContainer;
 
 $container = (new Container())
     ->delegate(new ReflectionContainer())
-    ->addServiceProvider(new ApplicationServiceProvider());
+    ->addServiceProvider(new ApplicationServiceProvider(__DIR__.'/../config/config.yml'));
 
-/** @var SmscApplication $app */
-$app = $container->get(SmscApplication::class);
+/** @var \Choccybiccy\Smpp\Application $app */
+$app = $container->get(\Choccybiccy\Smpp\Application::class);
 $app->run();
