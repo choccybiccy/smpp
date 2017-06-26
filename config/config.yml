@@ -1,16 +1,16 @@
 server:
   listen_address: tcp://0.0.0.0:9000 # (tcp/tls)://IP:PORT
   context: []
+  events: []
 
 connector:
   connections:
     - address: 127.0.0.1:9000
-      bind:
-        type: bind_transceiver
-        pdu:
-          systemId: example
-          password: password
+      type: bind_transceiver
+      systemId: example
+      password: password
   options: []
+  events: []
 
 log:
   name: smsc

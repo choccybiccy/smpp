@@ -12,24 +12,31 @@ class Connection
     /**
      * @var string
      */
-    protected $bind;
+    protected $type;
 
     /**
-     * @var array
+     * @var string
      */
-    protected $pdu;
+    protected $systemId;
+
+    /**
+     * @var string
+     */
+    protected $password;
 
     /**
      * Connection constructor.
      * @param string $address
-     * @param string $bind
-     * @param array $pdu
+     * @param string $type
+     * @param string $systemId
+     * @param string $password
      */
-    public function __construct($address, $bind, array $pdu)
+    public function __construct($address, $type, $systemId, $password)
     {
         $this->address = $address;
-        $this->bind = $bind;
-        $this->pdu = $pdu;
+        $this->type = $type;
+        $this->systemId = $systemId;
+        $this->password = $password;
     }
 
     /**
@@ -43,17 +50,25 @@ class Connection
     /**
      * @return string
      */
-    public function getBind()
+    public function getType()
     {
-        return $this->bind;
+        return $this->type;
     }
 
     /**
-     * @return array
+     * @return string
      */
-    public function getPdu()
+    public function getSystemId()
     {
-        return $this->pdu;
+        return $this->systemId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPassword()
+    {
+        return $this->password;
     }
 
     /**
@@ -66,8 +81,9 @@ class Connection
         foreach($connections as $connection) {
             $return[] = new static(
                 $connection['address'],
-                $connection['bind']['type'],
-                $connection['bind']['pdu']
+                $connection['type'],
+                $connection['systemId'],
+                $connection['password']
             );
         }
         return $return;

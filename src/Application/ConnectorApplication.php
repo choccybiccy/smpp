@@ -4,9 +4,9 @@ namespace Choccybiccy\Smpp\Application;
 
 use Choccybiccy\Smpp\Application\Traits\CanSendAndReceivePdus;
 use Choccybiccy\Smpp\Connector\Connection;
-use Choccybiccy\Smpp\Pdu\BindTransceiver;
 use Choccybiccy\Smpp\PduFactory;
-use Psr\Log\LoggerInterface;
+use League\Event\Emitter;
+use League\Event\Event;
 use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\ConnectorInterface;
@@ -36,9 +36,9 @@ class ConnectorApplication implements ApplicationInterface
     protected $pduFactory;
 
     /**
-     * @var LoggerInterface
+     * @var Emitter
      */
-    protected $log;
+    protected $emitter;
 
     /**
      * ConnectorApplication constructor.
@@ -46,20 +46,20 @@ class ConnectorApplication implements ApplicationInterface
      * @param ConnectorInterface $connector
      * @param Connection[] $connections
      * @param PduFactory $pduFactory
-     * @param LoggerInterface $log
+     * @param Emitter $emitter
      */
     public function __construct(
         LoopInterface $loop,
         ConnectorInterface $connector,
         array $connections,
         PduFactory $pduFactory,
-        LoggerInterface $log
+        Emitter $emitter
     ) {
         $this->loop = $loop;
         $this->connector = $connector;
         $this->connections = $connections;
         $this->pduFactory = $pduFactory;
-        $this->log = $log;
+        $this->emitter = $emitter;
     }
 
     /**
@@ -70,10 +70,18 @@ class ConnectorApplication implements ApplicationInterface
         foreach ($this->connections as $connectionDetails) {
             $this->connector->connect($connectionDetails->getAddress())
                 ->then(function(ConnectionInterface $connection) use ($connectionDetails) {
-                    $this->log->info('Connected to ' . $connection->getRemoteAddress());
+                    $this->handleConnection($connection);
                     $this->bind($connection, $connectionDetails);
                 });
         }
+    }
+
+    protected function handleConnection(ConnectionInterface $connection)
+    {
+        $this->emitter->emit(Event::named('connector.connection'), $connection);
+        $connection->on('close', function () use ($connection) {
+            $this->emitter->emit(Event::named('connector.connection.close'), $connection);
+        });
     }
 
     /**
@@ -84,8 +92,11 @@ class ConnectorApplication implements ApplicationInterface
     {
         $pdu = $this->sendPdu(
             $connection,
-            $this->pduFactory->createFromCommand($connectionDetails->getBind(), $connectionDetails->getPdu())
+            $this->pduFactory->createFromCommand($connectionDetails->getType(), [
+                'systemId' => $connectionDetails->getSystemId(),
+                'password' => $connectionDetails->getPassword(),
+            ])
         );
-        $this->log->info('>>> ' . bin2hex($pdu->encode()));
+        $this->emitter->emit(Event::named('connector.pdu.' . $pdu->getCommandName()), $pdu, $connection);
     }
 }

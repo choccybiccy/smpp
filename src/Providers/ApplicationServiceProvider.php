@@ -2,23 +2,16 @@
 
 namespace Choccybiccy\Smpp\Providers;
 
-use Choccybiccy\Smpp\AbstractApplication;
 use Choccybiccy\Smpp\Application;
 use Choccybiccy\Smpp\Config;
 use Choccybiccy\Smpp\Connector\Connection;
-use Choccybiccy\Smpp\EsmeApplication;
-use Choccybiccy\Smpp\Monolog\Processor\ApplicationContextProcessor;
 use Choccybiccy\Smpp\PduFactory;
-use Choccybiccy\Smpp\SmscApplication;
 use League\Container\ServiceProvider\AbstractServiceProvider;
+use League\Event\Emitter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use Monolog\Processor\IntrospectionProcessor;
-use Monolog\Processor\ProcessIdProcessor;
 use Psr\Log\LoggerInterface;
-use React\EventLoop\Factory as LoopFactory;
 use React\EventLoop\Factory;
-use React\EventLoop\LoopInterface;
 use React\Socket\Connector;
 use React\Socket\Server;
 
@@ -31,6 +24,7 @@ class ApplicationServiceProvider extends AbstractServiceProvider
         Application::class,
         Config::class,
         LoggerInterface::class,
+        Emitter::class,
     ];
 
     /**
@@ -64,25 +58,35 @@ class ApplicationServiceProvider extends AbstractServiceProvider
                 [$container->get('logger.handler')]
             );
         });
+        $container->share('event.emitter', function () use ($container, $config) {
+            $emitter = new Emitter();
+            foreach ($config->get('server.events') as $event => $listener) {
+                $emitter->addListener('server.' . $event, $container->get($listener));
+            }
+            foreach ($config->get('connector.events') as $event => $listener) {
+                $emitter->addListener('connector.' . $event, $container->get($listener));
+            }
+            return $emitter;
+        });
 
         $container->add(Application::class, function () use ($container, $config) {
             $loop = Factory::create();
-            $log = $container->get('logger');
+            $eventEmitter = $container->get('event.emitter');
             return new Application(
                 $loop,
                 new Application\ServerApplication(
                     $loop,
                     new Server($config->get('server.listen_address'), $loop),
-                    $log
+                    new PduFactory(),
+                    $eventEmitter
                 ),
                 new Application\ConnectorApplication(
                     $loop,
                     new Connector($loop, $config->get('connector.options')),
                     Connection::makeFromArray($config->get('connector.connections')),
                     new PduFactory(),
-                    $log
-                ),
-                $log
+                    $eventEmitter
+                )
             );
         });
     }

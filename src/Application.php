@@ -5,7 +5,6 @@ namespace Choccybiccy\Smpp;
 use Choccybiccy\Smpp\Application\ApplicationInterface;
 use Choccybiccy\Smpp\Application\ConnectorApplication;
 use Choccybiccy\Smpp\Application\ServerApplication;
-use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
 
 class Application implements ApplicationInterface
@@ -26,27 +25,19 @@ class Application implements ApplicationInterface
     protected $connectorApplication;
 
     /**
-     * @var LoggerInterface
-     */
-    protected $log;
-
-    /**
      * Application constructor.
      * @param LoopInterface $loop
      * @param ServerApplication $serverApplication
      * @param ConnectorApplication $connectorApplication
-     * @param LoggerInterface $log
      */
     public function __construct(
         LoopInterface $loop,
         ServerApplication $serverApplication,
-        ConnectorApplication $connectorApplication,
-        LoggerInterface $log
+        ConnectorApplication $connectorApplication
     ) {
         $this->loop = $loop;
         $this->serverApplication = $serverApplication;
         $this->connectorApplication = $connectorApplication;
-        $this->log = $log;
     }
 
     /**

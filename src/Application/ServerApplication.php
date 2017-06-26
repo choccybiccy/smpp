@@ -2,7 +2,9 @@
 
 namespace Choccybiccy\Smpp\Application;
 
-use Psr\Log\LoggerInterface;
+use Choccybiccy\Smpp\PduFactory;
+use League\Event\Emitter;
+use League\Event\Event;
 use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface;
@@ -20,21 +22,28 @@ class ServerApplication implements ApplicationInterface
     protected $server;
 
     /**
-     * @var LoggerInterface
+     * @var PduFactory
      */
-    protected $log;
+    protected $pduFactory;
+
+    /**
+     * @var Emitter
+     */
+    protected $emitter;
 
     /**
      * ServerApplication constructor.
      * @param LoopInterface $loop
      * @param ServerInterface $server
-     * @param LoggerInterface $log
+     * @param PduFactory $pduFactory
+     * @param Emitter $emitter
      */
-    public function __construct(LoopInterface $loop, ServerInterface $server, LoggerInterface $log)
+    public function __construct(LoopInterface $loop, ServerInterface $server, PduFactory $pduFactory, Emitter $emitter)
     {
         $this->loop = $loop;
         $this->server = $server;
-        $this->log = $log;
+        $this->pduFactory = $pduFactory;
+        $this->emitter = $emitter;
     }
 
     /**
@@ -42,20 +51,16 @@ class ServerApplication implements ApplicationInterface
      */
     public function run()
     {
-        $this->log->info('Listening for connections on ' . $this->server->getAddress());
         $this->server->on('connection', function (ConnectionInterface $connection) {
-            $this->handleConnection($connection);
-        });
-    }
-
-    /**
-     * @param ConnectionInterface $connection
-     */
-    protected function handleConnection(ConnectionInterface $connection)
-    {
-        $this->log->info('Connection from ' . $connection->getRemoteAddress());
-        $connection->on('data', function ($data) {
-           $this->log->info('<<< ' . bin2hex($data));
+            $this->emitter->emit(Event::named('server.connection'), $connection);
+            $connection->on('data', function ($data) use ($connection) {
+                $pdus = $this->pduFactory->createFromData($data);
+                if ($pdus) {
+                    foreach ($pdus as $pdu) {
+                        $this->emitter->emit('server.pdu.' . $pdu->getCommandName(), $pdu, $connection);
+                    }
+                }
+            });
         });
     }
 }

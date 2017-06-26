@@ -19,10 +19,12 @@
         "react/socket": "^0.8.0",
         "monolog/monolog": "^1.22",
         "symfony/yaml": "^3.3",
-        "illuminate/config": "^5.4"
+        "illuminate/config": "^5.4",
+        "league/event": "^2.1"
     },
     "autoload": {
         "psr-4": {
+            "App\\": "app/",
             "Choccybiccy\\Smpp\\": "src/"
         }
     },
