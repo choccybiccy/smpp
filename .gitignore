@@ -2,3 +2,4 @@
 /vendor
 cache.properties
 /.idea
+.php_cs.cache

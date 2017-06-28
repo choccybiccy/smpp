@@ -11,6 +11,7 @@ class PduFactory
 {
     /**
      * Command names to classes.
+     *
      * @var array
      */
     protected $commands = [
@@ -39,6 +40,7 @@ class PduFactory
 
     /**
      * Command IDs to names.
+     *
      * @var array
      */
     protected $commandIds = [
@@ -79,10 +81,14 @@ class PduFactory
         }
         $position = 0;
         while ($position < $packetLength) {
-            /** @var int $pduLength */
+            /**
+ * @var int $pduLength
+*/
             extract(unpack('NpduLength', substr($data, $position, 4)), EXTR_OVERWRITE);
             $pduData = substr($data, $position, $pduLength);
-            /** @var int $commandId */
+            /**
+ * @var int $commandId
+*/
             extract(unpack('NcommandId', substr($pduData, 4, 4)), EXTR_OVERWRITE);
             if (array_key_exists($commandId, $this->commandIds)) {
                 $pdus[] = $this->createFromCommandId($commandId)->decode($data);

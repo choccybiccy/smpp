@@ -3,7 +3,9 @@
     "description": "SMPP protocol library.",
     "type": "library",
     "require-dev": {
-        "phpunit/phpunit": "^6.1"
+        "phpunit/phpunit": "^6.1",
+        "friendsofphp/php-cs-fixer": "^2.3",
+        "squizlabs/php_codesniffer": "^3.0"
     },
     "license": "MIT",
     "authors": [
@@ -32,5 +34,16 @@
         "psr-4": {
             "Choccybiccy\\Smpp\\": "tests/"
         }
+    },
+    "scripts": {
+        "standards": [
+            "php ./vendor/bin/php-cs-fixer fix src/",
+            "php ./vendor/bin/php-cs-fixer fix tests/",
+            "php ./vendor/bin/phpcs --standard=PSR2 src/",
+            "php ./vendor/bin/phpcs --standard=PSR2 tests/"
+        ],
+        "tests": [
+            "php ./vendor/bin/phpunit"
+        ]
     }
 }

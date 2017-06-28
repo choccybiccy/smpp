@@ -49,5 +49,4 @@ class Application implements ApplicationInterface
         $this->connectorApplication->run();
         $this->loop->run();
     }
-
 }

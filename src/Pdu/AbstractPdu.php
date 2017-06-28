@@ -193,15 +193,15 @@ abstract class AbstractPdu
     }
 
     /**
-     * @param $type
-     * @param $value
+     * @param string $type
+     * @param mixed $value
+     * @param int $length
      *
      * @return string
      */
     protected function encodeSection($type, $value, $length)
     {
-        switch ($type)
-        {
+        switch ($type) {
             case self::DATA_TYPE_INT:
                 $lengthFormat = [
                     1 => 'C',
@@ -258,8 +258,7 @@ abstract class AbstractPdu
      */
     public function decodeSection($data, $type, $field, $length, &$offset)
     {
-        switch ($type)
-        {
+        switch ($type) {
             case self::DATA_TYPE_INT:
                 $value = true;
                 if ($length > 0) {
@@ -294,8 +293,7 @@ abstract class AbstractPdu
     protected function decodeInt($data, &$offset, $length)
     {
         $format = "N";
-        switch ($length)
-        {
+        switch ($length) {
             case 1:
                 $format = 'C';
                 break;
@@ -326,7 +324,7 @@ abstract class AbstractPdu
 
         $string = '';
         $current = $data[$offset];
-        while("\0" !== $current && $offset < ($offset+$length)) {
+        while ("\0" !== $current && $offset < ($offset+$length)) {
             $string.= $current;
             $offset++;
             if (isset($data[$offset])) {

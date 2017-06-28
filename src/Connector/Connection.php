@@ -78,7 +78,7 @@ class Connection
     public static function makeFromArray(array $connections)
     {
         $return = [];
-        foreach($connections as $connection) {
+        foreach ($connections as $connection) {
             $return[] = new static(
                 $connection['address'],
                 $connection['type'],

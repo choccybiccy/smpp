@@ -63,13 +63,13 @@ class ConnectorApplication implements ApplicationInterface
     }
 
     /**
-     * @return mixed
+     * @return void
      */
     public function run()
     {
         foreach ($this->connections as $connectionDetails) {
             $this->connector->connect($connectionDetails->getAddress())
-                ->then(function(ConnectionInterface $connection) use ($connectionDetails) {
+                ->then(function (ConnectionInterface $connection) use ($connectionDetails) {
                     $this->handleConnection($connection);
                     $this->bind($connection, $connectionDetails);
                 });
